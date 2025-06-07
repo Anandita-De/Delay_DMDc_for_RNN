@@ -17,6 +17,7 @@ from sklearn.metrics import r2_score
 
 n=100
 
+#random Gaussian connectivity
 np.random.seed(26)
 A=np.random.normal(0,0.2,size=(n,n))
 
@@ -64,46 +65,35 @@ plt.title(f'FVE in delay space, L={L}')
 plt.show()
 plt.close()
 
+#projecting X into the reduced space from the delay space spanned by the vectors in U_bar 
+#of dimension U_bar.shape[1]
 X_lift=U_bar.T@X_delay
 
+#fitting a matrix between to map between the neuron space and the
+#reduced space from the so that X=C X_lift
 C=Xt[:,L:]@np.linalg.pinv(X_lift,rcond=1e-10)
 
-
-# #testing prediction
-# x0_test=Xt[:,-1]
-
-# Xt_test=cmf.discrete_RNN_1(x0_test, 1000, n, np.tanh, A)
-
-# timesteps_to_predict=9
-
-# X_test=Xt_test[:,500:500+timesteps_to_predict+L]
-
-# X_test_delay=dmdf.delay_coordinates(X_test, L)
-
-# x0_test_delay=X_test_delay[:,0]
-
-# X_pred_delay=cmf.linear_sys(A_bar,timesteps_to_predict,x0_test_delay)
-
-# r2_score_X_pred_actual_and_X_true=r2_score(X_test_delay[-n:,1:].real,X_pred_delay[-n:,1:].real,multioutput='raw_values')
-
-# #prediction in reduced space
-# x0_proj_from_delay=np.matmul(U_bar.T,x0_test_delay)
-
-# X_test_proj_from_delay=np.matmul(U_bar.T,X_test_delay)
-
-# X_proj_pred=cmf.linear_sys(A_red,timesteps_to_predict,x0_proj_from_delay)
-
-# r2_score_X_pred_red_and_X_true=r2_score(X_test_proj_from_delay[:,1:].real,X_proj_pred[:,1:],multioutput='raw_values')
-
-# r2_score_X_pred_actual_and_X_true_1=r2_score(X_test_delay[-n:,1:].real,C@X_proj_pred[:,1:],multioutput='raw_values')
-
+#dimension of the reduced space
 n_components=len(A_red)
 
 
+#####################################################################
+
+#checking the prediction 
 timesteps_to_predict=10
 n_runs=100
+
+#In R2 score by timebin, the R2 score was calculated for length n_neuron vectors (xf_pred_t,xf_evoked_t) for each timebin 
+#In R2 score by neuron, the R2 score was calculated for length n_timesteps vector (xf_pred_i,xf_evoked_i) for each timebin
+
+
+#r2 score between the predicted and true in the reduced space
 r2_score_X_pred_red_and_X_true_by_timebin=np.zeros((n_runs,timesteps_to_predict))
+
+#r2 score between predicted and true from the last n rows of the A_bar by timebin 
 r2_score_X_pred_actual_and_X_true_by_timebin=np.zeros((n_runs,timesteps_to_predict))
+
+#r2 score between predicted and true by projecting to neuron space from reduced space using C
 r2_score_X_pred_actual_and_X_true_1=np.zeros((n_runs,timesteps_to_predict))
 
 r2_score_X_pred_red_and_X_true_by_components=np.zeros((n_runs,n_components))
@@ -200,12 +190,13 @@ ax.tick_params(axis='y', length=6)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
-#plt.xlabel('timestep predicted')
-#plt.ylabel('R2 score between x_pred and x_true')
-#plt.title(f'R2 score between pred and observed in real space,\n var_cutoff={var_cutoff}')
-plt.savefig('plots/control_review_fig/r2_score_between_pred_and_observed_neuron_space.pdf',bbox_inches='tight',transparent=True)
+plt.xlabel('timestep predicted')
+plt.ylabel('R2 score between x_pred and x_true')
+plt.title(f'R2 score between pred and observed in real space,\n var_cutoff={var_cutoff}')
+#plt.savefig('plots/control_review_fig/r2_score_between_pred_and_observed_neuron_space.pdf',bbox_inches='tight',transparent=True)
 plt.show()
 plt.close()
+
 
 #plotting r2 score between observed and predicted in neuron space using projection
 #from reduced space
@@ -220,7 +211,10 @@ plt.title(f'R2 score between pred and observed in real space,\n var_cutoff={var_
 plt.show()
 plt.close()
 
-#plotting a few trajectories in neuron space
+
+
+#################################################################
+# #plotting a few trajectories in neuron space
 # fig,ax=plt.subplots(nrows=3,sharex=True,gridspec_kw = {'hspace':0},figsize=(8,6))
 # for pi,i in enumerate(indices):
 #     ax[pi].plot(X_t[i][1000+L+1+t-200-9:1000+L+1+t-9],color='k',linewidth=1)
@@ -232,7 +226,7 @@ plt.close()
 # plt.show()
 # plt.close()
 
-# #plotting trajectories predicted vs observed
+# #plotting trajectories predicted and observed
 # t=timesteps_to_predict
 # indices=[95,2,72]
 
@@ -244,7 +238,7 @@ plt.close()
 #     ax[pi].axvline(x=20,color='blue',linestyle='--')
 #     ax[pi].axvline(x=0,color='blue',linestyle='--')
 # plt.tight_layout()
-# plt.savefig('plots/control_review_fig/pred_and_observed_discrete_RNN_1_3_timeseries.pdf',bbox_inches="tight",transparent=True)
+# #plt.savefig('plots/control_review_fig/pred_and_observed_discrete_RNN_1_3_timeseries.pdf',bbox_inches="tight",transparent=True)
 # plt.show()
 # plt.close()
 
